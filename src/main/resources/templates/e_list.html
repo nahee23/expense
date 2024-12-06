@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Expense Manager</title>
+</head>
+<body>
+<h1>비용 리스트</h1>
+<hr />
+<table border="1">
+  <thead>
+  <th>이름</th>
+  <th>설명</th>
+  <th>요금</th>
+  <th>날짜</th>
+  </thead>
+  <tbody>
+  <tr th:each="exp : ${ expenses }">
+    <td th:text="${exp.name}"></td>
+    <td th:text="${exp.description}"></td>
+    <td th:text="${exp.amount}"></td>
+    <td th:text="${#dates.format(exp.date, 'yyyy-MM-dd HH:mm:ss') }"></td>
+  </tr>
+  </tbody>
+</table>
+</body>
+</html>
