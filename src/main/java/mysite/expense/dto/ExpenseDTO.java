@@ -4,7 +4,7 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import java.util.Date;
+import java.sql.Date;
 
 @Data //Get,Set 메소드 + toString 등
 @AllArgsConstructor //전체 필드 생성자
