@@ -8,13 +8,15 @@
 <body>
 <h1>비용 리스트</h1>
 <hr />
-<h2>당신이 사용한 비용은 총 999,000 원 입니다!</h2>
+<h2>당신이 사용한 비용은 총 <span th:text="|${#numbers.formatInteger(total,0,'COMMA')}원|"></span> 입니다!</h2>
 <form method="get" th:object="${filter}" th:action="@{/filterExpenses}">
   키워드 검색 : <input type="text" th:field="*{keyword}" placeholder="키워드 입력" />
   <select th:field="*{sortBy}">
     <option value="date">날짜</option>
     <option value="amount">가격</option>
   </select>
+  <input type="date" th:field="*{startDate}" />
+  <input type="date" th:field="*{endDate}" />
   <input type="submit" value="검색" />
 </form>
 <div>

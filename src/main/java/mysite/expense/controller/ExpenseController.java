@@ -1,11 +1,13 @@
 package mysite.expense.controller;
 
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import mysite.expense.dto.ExpenseDTO;
 import mysite.expense.dto.ExpenseFilterDTO;
 import mysite.expense.service.ExpenseService;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
+import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -42,8 +44,11 @@ public class ExpenseController {
 
     @GetMapping("/expenses")
     public String showList(Model model) {
-        model.addAttribute("expenses", expService.getAllExpenses());
+        List<ExpenseDTO> list = expService.getAllExpenses();
+        model.addAttribute("expenses", list);
         model.addAttribute("filter", new ExpenseFilterDTO());
+        Long total = expService.totalExpenses(list);
+        model.addAttribute("total", total);
         return "e_list";
     }
 
@@ -55,8 +60,12 @@ public class ExpenseController {
     }
 
     @PostMapping("/saveOrUpdateExpense")
-    public String saveOrUpdateExpense(@ModelAttribute("expense") ExpenseDTO expenseDTO) throws ParseException {
+    public String saveOrUpdateExpense(@Valid @ModelAttribute("expense") ExpenseDTO expenseDTO,
+                                      BindingResult result) throws ParseException {
         System.out.println("입력한 expenseDTO 객체 : " + expenseDTO);
+        if (result.hasErrors()) {
+            return "e_form"; //되돌아감(validation error)
+        }
         expService.saveExpenseDetails(expenseDTO);
         return "redirect:/expenses";
     }

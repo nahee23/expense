@@ -2,12 +2,14 @@ package mysite.expense.service;
 
 import lombok.RequiredArgsConstructor;
 import mysite.expense.dto.ExpenseDTO;
+import mysite.expense.dto.ExpenseFilterDTO;
 import mysite.expense.entity.Expense;
 import mysite.expense.repository.ExpenseRepository;
 import mysite.expense.util.DateTimeUtil;
 import org.modelmapper.ModelMapper;
 import org.springframework.stereotype.Service;
 
+import java.sql.Date;
 import java.text.ParseException;
 import java.util.List;
 import java.util.UUID;
@@ -86,8 +88,16 @@ public class ExpenseService {
         return mapToDTO(expense); //DTO 변환
     }
 
-    public List<ExpenseDTO> getFilterExpenses(String keyword, String sortBy) {
-        List<Expense> list = expRepo.findByNameContainingOrDescriptionContaining(keyword, keyword);
+    public List<ExpenseDTO> getFilterExpenses(ExpenseFilterDTO filter) throws ParseException {
+        String keyword = filter.getKeyword();
+        String sortBy = filter.getSortBy();
+        String startDate = filter.getStartDate();
+        String endDate = filter.getEndDate();
+        //sql 날짜로 변경
+        Date startDay = !startDate.isEmpty() ? DateTimeUtil.convertStringToDate(startDate) : new Date(0);
+        Date endDay = !endDate.isEmpty() ? DateTimeUtil.convertStringToDate(endDate) : new Date(System.currentTimeMillis());
+
+        List<Expense> list = expRepo.findByNameContainingAndDateBetween(keyword,startDay,endDay);
         List<ExpenseDTO> filterlist = list.stream()
                 .map(this::mapToDTO)
                 .collect(Collectors.toList());
@@ -98,6 +108,15 @@ public class ExpenseService {
                     filterlist.sort(((o1,o2)-> o2.getAmount().compareTo(o1.getAmount())));
                 }
         return filterlist;
+    }
+
+    //리스트의 총비용을 합계
+    public Long totalExpenses(List<ExpenseDTO> expenses) {
+        Long sum = expenses.stream().mapToLong(ExpenseDTO::getAmount).sum();
+//                .map(x->x.getAmount())
+//                .reduce(0L, Long::sum);
+        // 원래 아이템이 -> 다음에 있는 아이템으로 바뀜 (리스트를 Long 리스트로 바꿈?)
+        return sum;
     }
 
 }

@@ -11,12 +11,15 @@
 <hr />
 <form th:object="${expense}" th:action="@{/saveOrUpdateExpense}" method="post">
   <input type="text" th:field="*{name}" placeholder="이름 입력" />
+  <span th:if="${#fields.hasErrors('name')}" th:errors="*{name}"></span>
   <br /><br />
   <input type="number" th:field="*{amount}" placeholder="비용 입력" />
+  <span th:if="${#fields.hasErrors('amount')}" th:errors="*{amount}"></span>
   <br /><br />
-  <input type="date" th:field="*{dateString}" />
+  <input type="date" required th:field="*{dateString}" />
   <br /><br />
   <textarea rows="5" th:field="*{description}" placeholder="설명 입력"></textarea>
+  <span th:if="${#fields.hasErrors('description')}" th:errors="*{description}"></span>
   <br /><br />
   <button type="submit" th:text="${expense.id}==null?'저장':'수정'">Submit</button>
   <input type="hidden" th:field="*{id}" />
