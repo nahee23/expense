@@ -40,7 +40,12 @@ $(function () {
                     required: '패스워드 확인 입력해 주세요',
                     equalTo: '패스워드가 같지 않습니다!'
                 }
-        }
+        },
+            errorElement: 'span',
+            errorPlacement: function (error,element){
+                error.addClass('help-block');
+                error.insertAfter(element);
+            }
         })
     }
 })

@@ -24,6 +24,11 @@ $(function () {
                     minlength: "패스워드는 최소 4자 이상 입력해주세요",
                     maxlength: "패스워드는 최대 15자 까지 입력할 수 있습니다"
                 }
+            },
+            errorElement: 'span',
+            errorPlacement: function (error,element){
+                error.addClass('help-block');
+                error.insertAfter(element);
             }
         })
     }

@@ -4,6 +4,8 @@ import lombok.RequiredArgsConstructor;
 import mysite.expense.dto.ExpenseDTO;
 import mysite.expense.dto.ExpenseFilterDTO;
 import mysite.expense.entity.Expense;
+import mysite.expense.entity.User;
+import mysite.expense.exception.ExpenseNotFoundException;
 import mysite.expense.repository.ExpenseRepository;
 import mysite.expense.util.DateTimeUtil;
 import org.modelmapper.ModelMapper;
@@ -11,6 +13,7 @@ import org.springframework.stereotype.Service;
 
 import java.sql.Date;
 import java.text.ParseException;
+import java.time.LocalDate;
 import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
@@ -20,6 +23,7 @@ import java.util.stream.Collectors;
 public class ExpenseService {
 
     private final ExpenseRepository expRepo;
+    private final UserService uService;
     private final ModelMapper modelMapper;
 
 //    //autowire 대신에 생성자 주입
@@ -27,9 +31,13 @@ public class ExpenseService {
 //        this.expRepo = expRepo;
 //    }
 
-    //모든 비용 리스트를 가져옴
+    //모든 비용 리스트를 가져옴 (인증 유저의 비용들만)
     public List<ExpenseDTO> getAllExpenses() {
-        List<Expense> list = expRepo.findAll();
+        User user = uService.getLoggedUser();
+        List<Expense> list = expRepo.findByUserIdAndDateBetween(
+                user.getId(),
+                Date.valueOf(LocalDate.now().withDayOfMonth(1)),
+                Date.valueOf(LocalDate.now()));
         List<ExpenseDTO> listDTO = list.stream() //스트림으로 변환
                 .map(this::mapToDTO)            //mapToDTO로 모두 변환됨, 람다식 : .map(Expense e -> mapToDTO(e))
                 .collect(Collectors.toList()); //다시 리스트로
@@ -54,6 +62,7 @@ public class ExpenseService {
     public ExpenseDTO saveExpenseDetails(ExpenseDTO expenseDTO) throws ParseException {
         //1. DTO => Entity
         Expense expense = mapToEntity(expenseDTO);
+        expense.setUser(uService.getLoggedUser());
         //2. DB에 저장
         expense = expRepo.save(expense);
         //3. Entity => DTO
@@ -76,14 +85,14 @@ public class ExpenseService {
     public void deleteExpense(String id) {
         Expense expense = expRepo.findByExpenseId(id).orElseThrow(()->
                 //못 찾을 경우
-                new RuntimeException("해당 ID의 비용을 찾을 수 없습니다."));
+                new ExpenseNotFoundException("해당 ID의 비용을 찾을 수 없습니다."));
         expRepo.delete(expense);
     }
 
     //expenseId 로 수정할 expense 찾아서 expenseDTO 변환하여 리턴
     public ExpenseDTO getExpenseById(String id) {
         Expense expense = expRepo.findByExpenseId(id).orElseThrow(
-                ()-> new RuntimeException("해당 ID의 비용을 찾을 수 없습니다.")
+                ()-> new ExpenseNotFoundException("해당 ID의 비용을 찾을 수 없습니다.")
         );
         return mapToDTO(expense); //DTO 변환
     }
@@ -97,7 +106,8 @@ public class ExpenseService {
         Date startDay = !startDate.isEmpty() ? DateTimeUtil.convertStringToDate(startDate) : new Date(0);
         Date endDay = !endDate.isEmpty() ? DateTimeUtil.convertStringToDate(endDate) : new Date(System.currentTimeMillis());
 
-        List<Expense> list = expRepo.findByNameContainingAndDateBetween(keyword,startDay,endDay);
+        User user = uService.getLoggedUser();
+        List<Expense> list = expRepo.findByNameContainingAndDateBetweenAndUserId(keyword,startDay,endDay,user.getId());
         List<ExpenseDTO> filterlist = list.stream()
                 .map(this::mapToDTO)
                 .collect(Collectors.toList());
